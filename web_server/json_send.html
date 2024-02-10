@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON Data Sender</title>
+    <style>
+        #result img {
+            max-width: 50%;
+            height: 30%;
+        }
+
+        #jwtToken {
+            height: 70px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <h2>Send JSON Data to Docker TPM Proxy</h2>
+
+    <label for="jsonData">JSON Data:</label>
+    <br>
+    <textarea id="jsonData" rows="4" placeholder='{"Person": "Bob or Alice"}'' cols="30"></textarea>
+    <br>
+    <br>
+    <button onclick="fetchToken()">Fetch JWT Token</button>
+    <br>
+    <br>
+    <button onclick="updateToken()">Update JWT Token value</button>
+
+    <label for="jwtToken">JWT Token (Authorization Header):</label>
+    <br>
+    <textarea type="text" rows="5" id="jwtToken" placeholder="Token will appear here" cols="60"></textarea>
+    <br>
+    <br>
+    <label for="serverUrl">Proxy URL:</label>
+    <input type="text" id="serverUrl" placeholder="Enter proxy URL">
+    <br>
+    <br>
+    <label for="targetUrl">Target URL:</label>
+    <input type="text" id="targetUrl" placeholder="Enter server URL">
+    <br>
+    <br>
+    <button onclick="sendData()">Send Data</button>
+    <br>
+    <br>
+    <button onclick="updateKey()">Update public key</button>
+
+    <br>
+    <br>
+    <p id="result"></p>
+    <br>
+    <br>
+    <p id="reward"></p>
+
+    <script>
+
+        function fetchToken() {
+            var tokenElement = document.getElementById('jwtToken');
+            var serverTokenUrl = 'http://localhost:8000/generate_token';
+
+            fetch(serverTokenUrl)
+                .then(response => response.text())
+                .then(token => {
+                    tokenElement.value = token;
+                })
+                .catch(error => {
+                    console.error('Error fetching JWT token:', error);
+                    tokenElement.value = 'Error fetching token';
+                });
+        }
+
+        function updateToken() {
+            var tokenElement = document.getElementById('jwtToken');
+            tokenElement.value = tokenElement.value;
+        }
+
+        function updateKey() {
+            var proxyUrl = "http://127.0.0.1:9999/pem";
+            fetch(proxyUrl)
+                .then(response => response.text())
+                .catch(error => {
+                    console.error('Error updating the public key:', error);
+                });
+        }
+
+        function sendData() {
+
+            var jsonData = document.getElementById('jsonData').value;
+            var jwtToken = document.getElementById('jwtToken').value;
+            var serverUrl = document.getElementById('serverUrl').value;
+            var targetUrl = document.getElementById('targetUrl').value;
+
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', serverUrl, true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.setRequestHeader('Authorization', 'Bearer ' + jwtToken);
+            xhr.setRequestHeader('Target-URL', targetUrl);
+
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4) {
+                    var resultElement = document.getElementById('result');
+                    if (xhr.status === 200) {
+                        try {
+                        var formattedResponse = JSON.parse(xhr.responseText);
+                        var secretMessage = JSON.parse(formattedResponse);
+                        // console.log(secretMessage['HMM']);
+                        // console.log(secretMessage['HMM']['Secret'][0])
+                        var secretMsg = secretMessage['HMM']['Secret'][0]
+                        resultElement.textContent = secretMsg;
+                        var rewardElement = document.getElementById('reward');
+                        rewardElement.textContent = "Please enjoy this bird of paradise as a reward!"
+  
+                        var successImage = document.createElement('img');
+                        successImage.src = 'bird.jpeg';
+                        successImage.alt = 'Success';
+                        resultElement.appendChild(successImage);
+                    } catch (error) {
+                        resultElement.textContent = 'The access is not granted because you failed to sign your message!';
+                        }
+                    } else {
+                        resultElement.textContent = 'The access is not granted because you failed to sign your message!';
+                    }
+                }
+            };
+
+            xhr.send(jsonData);
+        }
+    </script>
+
+</body>
+</html>
