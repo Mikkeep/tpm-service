@@ -1,0 +1,20 @@
+version: '3.6'
+services:
+  tpmserver:
+    build: fast_server/.
+    ports:
+      - 8000:8000
+    volumes:
+      - ./fast_server/:/server
+  htmlserver:
+    build: web_server/.
+    ports:
+      - 80:80
+    volumes:
+      - ./web_server/:/usr/share/nginx/html
+  tpmproxy:
+    build: tpm_proxy/.
+    ports:
+      - 9999:9999
+    volumes:
+      - ./tpm_proxy/:/tpm2
