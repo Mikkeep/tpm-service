@@ -152,16 +152,12 @@ async def verify_token(request: Request):
             capture_output=True,
         )
 
-        pem_file_shorten = subprocess.run(
-            [
-                "dd",
-                f"if={signature_file}",
-                f"of=signatures/{name_of_file}.raw",
-                "bs=1",
-                "skip=6",
-                "count=256",
-            ]
-        )
+        with open(f"{signature_file}", "rb") as shortened:
+            shortened.seek(6)
+            readfile = shortened.read(256)
+            with open(f"signatures/{name_of_file}.raw", "wb") as written:
+                written.write(readfile)
+
     b64_signature = ""
     with open(f"signatures/{name_of_file}.raw", "rb") as b64sig:
         b64_signature = b64sig.read()
