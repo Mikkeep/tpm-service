@@ -12,9 +12,67 @@ services:
       - 80:80
     volumes:
       - ./web_server/:/usr/share/nginx/html
-  tpmproxy:
+  tpmproxy1:
     build: tpm_proxy/.
+    environment:
+      - PORT=9999
     ports:
       - 9999:9999
+    volumes:
+      - ./tpm_proxy/:/tpm2
+  tpmproxy2:
+    build: tpm_proxy/.
+    environment:
+      - PORT=9998
+    ports:
+      - 9998:9998
+    volumes:
+      - ./tpm_proxy/:/tpm2
+  tpmproxy3:
+    build: tpm_proxy/.
+    environment:
+      - PORT=9997
+    ports:
+      - 9997:9997
+    volumes:
+      - ./tpm_proxy/:/tpm2
+  tpmproxy4:
+    build: tpm_proxy/.
+    environment:
+      - PORT=9996
+    ports:
+      - 9996:9996
+    volumes:
+      - ./tpm_proxy/:/tpm2
+  tpmproxy5:
+    build: tpm_proxy/.
+    environment:
+      - PORT=9995
+    ports:
+      - 9995:9995
+    volumes:
+      - ./tpm_proxy/:/tpm2
+  tpmproxy6:
+    build: tpm_proxy/.
+    environment:
+      - PORT=9994
+    ports:
+      - 9994:9994
+    volumes:
+      - ./tpm_proxy/:/tpm2
+  tpmproxy7:
+    build: tpm_proxy/.
+    environment:
+      - PORT=9993
+    ports:
+      - 9993:9993
+    volumes:
+      - ./tpm_proxy/:/tpm2
+  tpmproxy8:
+    build: tpm_proxy/.
+    environment:
+      - PORT=9992
+    ports:
+      - 9992:9992
     volumes:
       - ./tpm_proxy/:/tpm2
