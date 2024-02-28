@@ -11,37 +11,15 @@ origins = ["*", "http://tpmserver", "http://tpmproxy"]
 
 try:
     # Try to init the proxy service
-    print("Following handles are in use:")
     handles = subprocess.run(["tpm2_getcap", "handles-persistent"], capture_output=True)
-    print(handles.stdout.decode())
-    if "0x81010002" and "0x81010003" in handles.stdout.decode():
-        print("EK & AK have persistent handles")
-        generate_ak = subprocess.run(
-            [
-                "tpm2_createak",
-                "-C",
-                "0x81010002",
-                "-c",
-                "ak.ctx",
-                "-G",
-                "rsa",
-                "-g",
-                "sha256",
-                "-s",
-                "rsassa",
-                "-u",
-                "ak.pub",
-                "-f",
-                "pem",
-                "-n",
-                "ak.name",
-            ],
-            capture_output=True,
-        )
+    if "0x81010002" in handles.stdout.decode():
+        print("EK handle is persisted, checking AK handle...")
+    if "0x81010003" in handles.stdout.decode():
+        print("AK handle is persisted as well")
     else:
-        print("Need to load EK & AK for message signing")
+        print("Need to create EK & AK for message signing")
         generate_ek = subprocess.run(
-            ["tpm2_createek", "-c", "0x81010002", "-G", "rsa", "-u", "ek.pub"],
+            ["tpm2_createek", "-c", "0x81010002", "-G", "rsa"],
             capture_output=True,
         )
         generate_ak = subprocess.run(
@@ -50,25 +28,19 @@ try:
                 "-C",
                 "0x81010002",
                 "-c",
-                "ak.ctx",
+                "ak_key.context",
                 "-G",
                 "rsa",
                 "-g",
                 "sha256",
                 "-s",
                 "rsassa",
-                "-u",
-                "ak.pub",
-                "-f",
-                "pem",
-                "-n",
-                "ak.name",
             ],
             capture_output=True,
         )
         print(generate_ak.stdout.decode())
         persist_ak = subprocess.run(
-            ["tpm2_evictcontrol", "-c", "ak.ctx", "0x81010003"], capture_output=True
+            ["tpm2_evictcontrol", "-c", "ak_key.context", "0x81010003"], capture_output=True
         )
         print(persist_ak.stdout.decode())
         handles = subprocess.run(
