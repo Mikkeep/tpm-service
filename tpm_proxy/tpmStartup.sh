@@ -16,7 +16,7 @@ ash
 
 cd /tpm2/
 
-uvicorn main:app --reload --port 9999 --host 0.0.0.0
+uvicorn main:app --reload --port $PORT --host 0.0.0.0
 
 
 #The Clear BSD License
