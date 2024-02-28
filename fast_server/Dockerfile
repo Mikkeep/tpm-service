@@ -17,4 +17,4 @@ RUN apt install -y\
 RUN chmod -R 777 ./
 
 #CMD [ "./start_server.sh" ]
-CMD [ "uvicorn", "main:app", "--reload", "--host", "0.0.0.0"]
+CMD [ "uvicorn", "main:app", "--reload", "--host", "0.0.0.0", "--port", "8000"]
