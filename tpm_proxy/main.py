@@ -4,10 +4,16 @@ from fastapi.middleware.cors import CORSMiddleware
 import hashlib
 import base64
 import requests
+import os
 
 app = FastAPI()
 
 origins = ["*", "http://tpmserver", "http://tpmproxy"]
+
+print("This is port:")
+print(os.environ["PORT"])
+
+port_num = os.environ["PORT"]
 
 try:
     # Try to init the proxy service
@@ -19,16 +25,17 @@ try:
     else:
         print("Need to create EK & AK for message signing")
         generate_ek = subprocess.run(
-            ["tpm2_createek", "-c", "0x81010002", "-G", "rsa"],
+            ["tpm2_createek", "-c", "0x81010002", "-G", "rsa", "-u", f"ek_{port_num}.pub"],
             capture_output=True,
         )
+        ak_contx = f"ak_key_{port_num}.context"
         generate_ak = subprocess.run(
             [
                 "tpm2_createak",
                 "-C",
                 "0x81010002",
                 "-c",
-                "ak_key.context",
+                ak_contx,
                 "-G",
                 "rsa",
                 "-g",
@@ -40,7 +47,7 @@ try:
         )
         print(generate_ak.stdout.decode())
         persist_ak = subprocess.run(
-            ["tpm2_evictcontrol", "-c", "ak_key.context", "0x81010003"], capture_output=True
+            ["tpm2_evictcontrol", "-c", ak_contx, "0x81010003"], capture_output=True
         )
         print(persist_ak.stdout.decode())
         handles = subprocess.run(
@@ -70,14 +77,17 @@ async def root():
 
 @app.get("/pem")
 async def get_pem():
+    cor_pub = os.environ["PORT"]
+    pub_loc = f"pub_gen/ak_{cor_pub}.pem"
     pem_file_gen = subprocess.run(
-        ["tpm2_readpublic", "-c", "0x81010003", "-o", "pub_gen/ak.pem", "-f", "pem"]
+        ["tpm2_readpublic", "-c", "0x81010003", "-o", pub_loc, "-f", "pem"]
     )
-    with open("pub_gen/ak.pem", "r") as pubkey:
+    with open(pub_loc, "r") as pubkey:
         public = ""
         public = pubkey.read()
 
-    requests.post(url="http://tpmserver:8000/pubkey", data=public.encode())
+    urli = f"http://tpmserver:8000/pubkey/{str(cor_pub)}"
+    requests.post(url=urli, data=public.encode())
 
     return {"public_key": public}
 
