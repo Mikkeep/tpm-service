@@ -59,17 +59,17 @@ async def gen_token():
     return enc_jwt
 
 
-@app.post("/pubkey")
-async def make_key(request: Request):
+@app.post("/pubkey/{num}")
+async def make_key(request: Request, num: str):
     content = await request.body()
     print(content.decode())
-    with open("pubkeys/ak.pem", "w") as pubkey:
+    with open(f"pubkeys/ak_{str(num)}.pem", "w") as pubkey:
         pubkey.write(content.decode())
-    return {"Wrote public key to a file": "ak.pem"}
+    return {f"Wrote public key to a file": "ak_{str(num)}.pem"}
 
 
-@app.post("/verify")
-async def verify_token(request: Request):
+@app.post("/verify/{num}")
+async def verify_token(request: Request, num: str):
     verify_token = request.headers.get("Authorization")
     verify_token = verify_token.split(" ")[1]
     verify_token_orig = verify_token
@@ -85,7 +85,8 @@ async def verify_token(request: Request):
     verify_signature = request.headers.get("SignatureJWT")
     verify_signature = base64.b64decode(verify_signature)
 
-    res = ver_sig("./pubkeys/ak.pem", verify_signature, sha256_token)
+    pth = f"./pubkeys/ak_{str(num)}.pem"
+    res = ver_sig(pth, verify_signature, sha256_token)
     verify_sig_res = {}
     if res:
         verify_sig_res = {
